@@ -1,0 +1,47 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "dnsZoneName": {
+            "type": "string",
+            "metadata": {
+                "description": "The name of the DNS zone."
+            }
+        },
+        "newRecordName": {
+            "type": "string",
+            "metadata": {
+                "description": "The name of the DNS Record to be created."
+            }
+        },
+        "IPAddress": {
+            "type": "string",
+            "metadata": {
+                "description": "The IP of the DNS Record to be created."
+            }
+        }
+    },
+    "resources": [
+        {
+            "type": "Microsoft.Network/dnszones",
+            "name": "[parameters('dnsZoneName')]",
+            "apiVersion": "2016-04-01",
+            "location": "global",
+            "properties": {}
+        },
+        {
+            "name": "[concat(parameters('dnsZoneName'), '/', parameters('newRecordName'))]",
+            "type": "Microsoft.Network/dnsZones/A",
+            "apiVersion": "2017-09-01",
+            "properties": {
+              "metadata": {},
+              "TTL": 3600,
+              "ARecords": [
+                {
+                  "ipv4Address": "[parameters('IPAddress')]"
+                }
+              ]
+            }
+        }
+    ]
+}

@@ -1,0 +1,65 @@
+﻿{
+  "$schema": "http://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "aseName": {
+      "type": "string",
+      "metadata": {
+        "description": "Name of the App Service Environment"
+      }
+    },
+    "Region": {
+      "type": "string",
+      "metadata": {
+        "description": "Location of the App Service Environment"
+      }
+    },
+    "vnetID": {
+      "type": "string",
+      "metadata": {
+        "description": "ARM Url reference for the virtual network that will contain the ASE.  Use Microsoft.Network for ARM vnets.  Use Microsoft.ClassicNetwork for older ASM vnets.  /subscriptions/subIDGoesHere/resourceGroups/rgNameGoesHere/providers/Microsoft.Network/virtualNetworks/vnetnamegoeshere"
+      }
+    },
+    "SubnetName": {
+      "type": "string",
+      "metadata": {
+        "description": "Subnet name that will contain the App Service Environment"
+      }
+    },
+    "internalLoadBalancingMode": {
+      "type": "int",
+      "metadata": {
+        "description": "0 = public VIP only, 1 = only ports 80/443 are mapped to ILB VIP, 2 = only FTP ports are mapped to ILB VIP, 3 = both ports 80/443 and FTP ports are mapped to an ILB VIP."
+      }
+    },
+    "DNS": {
+      "type": "string",
+      "metadata": {
+        "description": "Set this to the root domain associated with the Web App."
+      }
+    }
+  },
+  "variables": {
+    "ipSslAddressCount": "0"
+  },
+  "resources": [
+    {
+      "apiVersion": "2015-08-01",
+      "type": "Microsoft.Web/hostingEnvironments",
+      "name": "[parameters('aseName')]",
+      "kind": "ASEV2",
+      "location": "[parameters('Region')]",
+      "properties": {
+        "name": "[parameters('aseName')]",
+        "location": "[parameters('Region')]",
+        "ipSslAddressCount": "[variables('ipSslAddressCount')]",
+        "internalLoadBalancingMode": "[parameters('internalLoadBalancingMode')]",
+        "dnsSuffix": "[parameters('DNS')]",
+        "virtualNetwork": {
+          "Id": "[parameters('vnetID')]",
+          "Subnet": "[parameters('SubnetName')]"
+        }        
+      }
+    }
+  ]
+}

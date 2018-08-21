@@ -1,0 +1,139 @@
+﻿{
+  "$schema": "http://schema.management.azure.com/schemas/2014-04-01-preview/deploymentTemplate.json#",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "sqlAdministratorLogin": {
+      "type": "string",
+      "metadata": {
+        "description": "The SQL Server administrator login"
+      }
+    },
+    "sqlAdministratorLoginPassword": {
+      "type": "securestring",
+      "metadata": {
+        "description": "The SQL Server administrator login password."
+      }
+    },
+    "sqlServerName": {
+      "type": "string",
+      "metadata": {
+        "description": "The SQL Server name."
+      }
+    },
+    "elasticPoolName": {
+      "type": "string",
+      "metadata": {
+        "description": "The Elastic Pool name."
+      }
+    },
+    "elasticPooledition": {
+      "type": "string",
+      "defaultValue": "PremiumRS",
+      "allowedValues": [
+        "Basic",
+        "Standard",
+        "Premium",
+        "PremiumRS"
+      ],
+      "metadata": {
+        "description": "The Elastic Pool edition."
+      }
+    },
+    "poolDtu": {
+      "type": "int",
+      "metadata": {
+        "description": "The Elastic Pool DTU."
+      }
+    },
+    "databaseDtuMin": {
+      "type": "int",
+      "defaultValue": 0,
+      "metadata": {
+        "description": "The Elastic Pool database DTU min."
+      }
+    },
+    "databaseDtuMax": {
+      "type": "int",
+      "metadata": {
+        "description": "The Elastic Pool database DTU max."
+      }
+    },
+    "databaseName": {
+      "type": "string",
+      "metadata": {
+        "description": "The SQL Databases names."
+      }
+    },
+    "databaseCollation": {
+      "type": "string",
+      "defaultValue": "SQL_Latin1_General_CP1_CI_AS",
+      "metadata": {
+        "description": "The SQL Database collation."
+      }
+    },
+    "location": {
+      "type": "string",
+      "defaultValue": "[resourceGroup().location]",
+      "metadata": {
+        "description": "Location for all resources."
+      }
+    }
+  },
+  "variables": {},
+  "resources": [
+    {
+      "apiVersion": "2014-04-01-preview",
+      "location": "[parameters('location')]",
+      "name": "[parameters('sqlServerName')]",
+      "properties": {
+        "administratorLogin": "[parameters('sqlAdministratorLogin')]",
+        "administratorLoginPassword": "[parameters('sqlAdministratorLoginPassword')]",
+        "version": "12.0"
+      },
+      "type": "Microsoft.Sql/servers"
+    },
+    {
+      "apiVersion": "2014-04-01",
+      "dependsOn": [
+        "[concat('Microsoft.Sql/servers/', parameters('sqlServerName'))]"
+      ],
+      "location": "[parameters('location')]",
+      "name": "[concat(parameters('sqlServerName'), '/', parameters('elasticPoolName'))]",
+      "properties": {
+        "edition": "[parameters('elasticPooledition')]",
+        "dtu": "[parameters('poolDtu')]",
+        "databaseDtuMin": "[parameters('databaseDtuMin')]",
+        "databaseDtuMax": "[parameters('databaseDtuMax')]"
+      },
+      "type": "Microsoft.Sql/servers/elasticPools"
+    },
+    {
+      "type": "Microsoft.Sql/servers/databases",
+      "name": "[concat(parameters('sqlServerName'), '/', parameters('databaseName'))]",
+      "location": "[parameters('location')]",
+      "apiVersion": "2014-04-01-preview",
+      "dependsOn": [
+        "[concat('Microsoft.Sql/servers/', parameters('sqlServerName'))]",
+        "[concat('Microsoft.Sql/servers/', parameters('sqlServerName') ,'/elasticpools/', parameters('elasticPoolName'))]"
+      ],
+      "properties": {
+        "collation": "[parameters('databaseCollation')]",
+        "requestedServiceObjectiveName": "ElasticPool",
+        "elasticPoolName": "[parameters('elasticPoolName')]"
+      }
+    },
+    {
+      "apiVersion": "2014-04-01-preview",
+      "dependsOn": [
+        "[concat('Microsoft.Sql/servers/', parameters('sqlServerName'))]"
+      ],
+      "location": "[parameters('location')]",
+      "name": "[concat(parameters('sqlServerName'), '/', 'AllowAllWindowsAzureIps')]",
+      "properties": {
+        "endIpAddress": "0.0.0.0",
+        "startIpAddress": "0.0.0.0"
+      },
+      "type": "Microsoft.Sql/servers/firewallrules"
+    }
+  ]
+}
