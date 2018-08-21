@@ -4,7 +4,6 @@
   "parameters": {
     "SystemPrefixName": {
       "type": "string",
-      "defaultValue": "fsdi-appsrvinfra-test",
       "metadata": {
         "description": "String to append to all resource names"
       }
