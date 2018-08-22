@@ -1,12 +1,16 @@
-﻿<#
+<#
 .Synopsis
    Deployment of the App Service Infrastructure
 .DESCRIPTION
    One script to rule them all.  This is the script that deploys the AppSrvInfra.  It deploys multiple templates and sets the variables for these templates.
 .EXAMPLE
-   Example of how to use this cmdlet
+    This runs the deployment from a local file of the powershell, and accesses the json templates in the code repository.   
+        .\AzureDeploy.ps1 -AppName fsdi-cloudops2 -Environment Dev -TemplateUri https://raw.githubusercontent.com/mtrgoose/appsrv/master/azuredeploy.json -vnetAddressPrefix 10.12.216.0 ^C
 .EXAMPLE
-   Another example of how to use this cmdlet
+   This runs the code completely from the code repository.  This should be the default deployment method.
+        $Script = Invoke-WebRequest 'https://raw.githubusercontent.com/mtrgoose/appsrv/master/azuredeploy.ps1'
+        $ScriptBlock = [Scriptblock]::Create($Script.Content)
+        Invoke-Command -ScriptBlock $ScriptBlock -ArgumentList ($Templateparameters)
 .INPUTS
    Inputs to this cmdlet (if any)
 .OUTPUTS
@@ -14,7 +18,7 @@
 .NOTES
    Version
    v1.0		2 Aug 2018		Craig Franzen		original script
-   
+   v2.0     21 Aug 2018     Craig Franzen       Changed parameter files, created consistancy in naming, 
    This script is based on this 
 .COMPONENT
    The component this cmdlet belongs to
@@ -27,14 +31,10 @@
 param (
 	[Parameter(Mandatory=$false)]
     [string]$AppName,
-	[Parameter(Mandatory=$true)]
+    [Parameter(Mandatory=$true)]
 	[ValidateSet("Dev","Stage","Prod")]
     [string]$Environment,
 	[Parameter(Mandatory=$false)]
-    [string]$Region = "Central US",
-    [Parameter(Mandatory=$true)]
-    [string]$vnetAddressPrefix,
-    [Parameter(Mandatory=$false)]
     [string]$TemplateFile,
 	[Parameter(Mandatory=$false)]
     [string]$TemplateParameterFile,
@@ -42,12 +42,25 @@ param (
     [string]$TemplateUri,
 	[Parameter(Mandatory=$false)]
     [string]$TemplateParameterUri,
-	[Parameter(Mandatory=$false)]
+	[Parameter(Mandatory=$true)]
+    [string]$vnetAddressPrefix,
+    [Parameter(Mandatory=$false)]
+    [string]$sqlAdministratorLogin = "fsdiSAadmin",
+    [Parameter(Mandatory=$false)]
     [ValidateSet("VSTS","Manual")]
-	[string]$Deployment = "Manual"
+    [string]$Deployment = "Manual",
+    [Parameter(Mandatory=$false)]
+    [string]$DNSName = "cargill-fms.com",
+    [Parameter(Mandatory=$false)]
+    [string]$Region = "Central US"
 )
 
+if ($Deployment -eq "Manual" -and $TemplateFile -eq $Null -and $TemplateUri -eq $Null) {Write-Host "You must enter either a TemplateFile or TemplateUri location.  Try again, quiting"; Break}
+
 #region Variables
+$KeyvaultName = "cloudops-" + $Environment
+$sqlAdministratorLoginPassword = (Get-AzureKeyVaultSecret -VaultName $KeyvaultName -Name $sqlAdministratorLogin).SecretValue
+
 $RGName = $AppName + "-" + $Environment + "-rg"		
 $DeploymentName = $AppName + "-" +  $Environment + "-Deployment"
 $SystemPrefixName = $AppName + "-" + $Environment
@@ -60,6 +73,18 @@ $vnetAddressSpace = $vnetAddressPrefix + '/24'
 $WAFSubnetAddressSpace = $vnetAddressPrefix.replace('.0','.224') + '/27'
 $WebAppSubnetAddressSpace = $vnetAddressPrefix+ '/26'
 $BackendSubnetAddressSpace = $vnetAddressPrefix.replace('.0','.128') + '/26'
+
+$Templateparameters = @{
+    "SystemPrefixName"=$SystemPrefixName; `
+    "vnetAddressSpace"=$vnetAddressSpace; `
+    "WAFSubnetAddressSpace"=$WAFSubnetAddressSpace; `
+    "WebAppSubnetAddressSpace"=$WebAppSubnetAddressSpace; `
+    "BackendSubnetAddressSpace"=$BackendSubnetAddressSpace; `
+    "WebAppSubnetPrefix"=$vnetAddressPrefix; `
+    "sqlAdministratorLogin"=$sqlAdministratorLogin; `
+    "sqlAdministratorLoginPassword"=$sqlAdministratorLoginPassword; `
+    "Region"=$Region
+}
 #endregion Variables
 
 ##Catch to verify AzureRM session is active.  Forces sign-in if no session is found
@@ -149,26 +174,37 @@ Write-Host "=> Generating password for Azure SQL" -ForegroundColor Yellow
 Write-Host "=>" -ForegroundColor Yellow
 Write-Host "=> Deploying the ASE Blueprint..." -ForegroundColor Yellow
 
-if ($Deployment -eq "Manual") {
+if ($TemplateFile) {
 	New-AzureRMResourceGroupDeployment -Name $DeploymentName `
 		-ResourceGroupName $RgName `
 		-TemplateFile $TemplateFile `
-		-TemplateParameterFile $TemplateParameterFile `
-		-SystemPrefixName $SystemPrefixName `
-		-vnetAddressSpace $vnetAddressSpace `
-		-WAFSubnetAddressSpace $WAFSubnetAddressSpace `
-		-WebAppSubnetAddressSpace $WebAppSubnetAddressSpace `
-		-BackendSubnetAddressSpace $BackendSubnetAddressSpace `
-		-WebAppSubnetPrefix $vnetAddressPrefix `
-		-Region $Region `
-		-Mode Incremental `
+		-TemplateParameterObject $Templateparameters `
+        -Mode Incremental `
         -Verbose
         
     New-AzureRmResourceGroupDeployment -Name $DeploymentName `
         -ResourceGroupName $RgName `
         -TemplateParameterFile .\templates\vstsagent.parameters.json `
         -TemplateFile .\templates\vstsagent.json `
-        -SystemPrefixName  fsdi-cloudops-dev `
+        -SystemPrefixName  $SystemPrefixName `
+        -Location $Region `
+		-Mode Incremental `
+        -Verbose
+}
+
+if ($TemplateUri) {
+    New-AzureRMResourceGroupDeployment -Name $DeploymentName `
+		-ResourceGroupName $RgName `
+		-TemplateUri $TemplateUri `
+        -TemplateParameterObject $Templateparameters `
+        -Mode Incremental `
+        -Verbose
+        
+    New-AzureRmResourceGroupDeployment -Name $DeploymentName `
+        -ResourceGroupName $RgName `
+        -TemplateParameterFile .\templates\vstsagent.parameters.json `
+        -TemplateFile .\templates\vstsagent.json `
+        -SystemPrefixName  $SystemPrefixName `
         -Location $Region `
 		-Mode Incremental `
         -Verbose
@@ -354,6 +390,14 @@ Set-AzureRmVirtualNetworkSubnetConfig -VirtualNetwork $vnet -Name $vnet.Subnets.
                                       -AddressPrefix $vnet.Subnets.AddressPrefix[2]`
                                       -NetworkSecurityGroup $BENsg  | Out-Null
 Set-AzureRmVirtualNetwork -VirtualNetwork $vnet  | Out-Null
+#endregion
+
+# Create DNSZone for virtual network.
+#region
+$vNetID = (Get-AzureRmResourceGroupDeployment -ResourceGroupName $RgName -Name $DeploymentName).Outputs.vNetID.Value
+New-AzureRMDnsZone -Name $DNSName -ResourceGroupName $RgName `
+	-ZoneType Private `
+	-RegisterionVirtualNetworkID @($vNetID)
 #endregion
 
 Write-Host "=>" -ForegroundColor Yellow
