@@ -79,7 +79,7 @@
     }
   },
   "variables": {
-    "publicIPAddressName": "WAFAppGatewayPublicIP1",
+    "publicIPAddressName": "[concat(variables('applicationGatewayName')),'-PublicIP']",
     "vnetID": "[resourceId('Microsoft.Network/virtualNetworks',parameters('vnetName'))]",
     "subnetRef": "[concat(variables('vnetID'),'/subnets/',parameters('WAFSubnetName'))]",
     "publicIPRef": "[resourceId('Microsoft.Network/publicIPAddresses',variables('publicIPAddressName'))]",
