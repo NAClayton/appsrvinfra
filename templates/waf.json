@@ -79,7 +79,7 @@
     }
   },
   "variables": {
-    "publicIPAddressName": "[concat(parameters('applicationGatewayName')),'-PublicIP']",
+    "publicIPAddressName": "fsdi-cloudops-waf-PublicIP",
     "vnetID": "[resourceId('Microsoft.Network/virtualNetworks',parameters('vnetName'))]",
     "subnetRef": "[concat(variables('vnetID'),'/subnets/',parameters('WAFSubnetName'))]",
     "publicIPRef": "[resourceId('Microsoft.Network/publicIPAddresses',variables('publicIPAddressName'))]",
