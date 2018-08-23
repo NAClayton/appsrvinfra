@@ -37,15 +37,17 @@ param (
 	[Parameter(Mandatory=$false)]
     [string]$TemplateFile,
 	[Parameter(Mandatory=$false)]
-    [string]$TemplateParameterFile,
-	[Parameter(Mandatory=$false)]
     [string]$TemplateUri,
+    [Parameter(Mandatory=$false)]
+    [string]$VMTemplateFile,
 	[Parameter(Mandatory=$false)]
-    [string]$TemplateParameterUri,
-	[Parameter(Mandatory=$true)]
+    [string]$VMTemplateUri,
+    [Parameter(Mandatory=$true)]
     [string]$vnetAddressPrefix,
     [Parameter(Mandatory=$false)]
     [string]$sqlAdministratorLogin = "fsdiSAadmin",
+    [Parameter(Mandatory=$false)]
+    [string]$LocalAdminLogin = "fsdiSAadmin",
     [Parameter(Mandatory=$false)]
     [ValidateSet("VSTS","Manual")]
     [string]$Deployment = "Manual",
@@ -60,6 +62,7 @@ if ($Deployment -eq "Manual" -and $TemplateFile -eq $Null -and $TemplateUri -eq 
 #region Variables
 $KeyvaultName = "cloudops-" + $Environment
 $sqlAdministratorLoginPassword = (Get-AzureKeyVaultSecret -VaultName $KeyvaultName -Name $sqlAdministratorLogin).SecretValue
+$LocalAdminPassword = (Get-AzureKeyVaultSecret -VaultName $KeyvaultName -Name $LocalAdminLogin).SecretValue
 
 $RGName = $AppName + "-" + $Environment + "-rg"		
 $DeploymentName = $AppName + "-" +  $Environment + "-Deployment"
@@ -74,7 +77,7 @@ $WAFSubnetAddressSpace = $vnetAddressPrefix.replace('.0','.224') + '/27'
 $WebAppSubnetAddressSpace = $vnetAddressPrefix+ '/26'
 $BackendSubnetAddressSpace = $vnetAddressPrefix.replace('.0','.128') + '/26'
 
-$Templateparameters = @{
+$AppSrvTemplateparameters = @{
     "SystemPrefixName"=$SystemPrefixName; `
     "vnetAddressSpace"=$vnetAddressSpace; `
     "WAFSubnetAddressSpace"=$WAFSubnetAddressSpace; `
@@ -83,6 +86,13 @@ $Templateparameters = @{
     "WebAppSubnetPrefix"=$vnetAddressPrefix; `
     "sqlAdministratorLogin"=$sqlAdministratorLogin; `
     "sqlAdministratorLoginPassword"=$sqlAdministratorLoginPassword; `
+    "Region"=$Region
+}
+
+$VMTemplateparameters = @{
+    "SystemPrefixName"=$SystemPrefixName; `
+    "LocalAdminLogin"=$LocalAdminLogin; `
+    "LocalAdminPassword"=$LocalAdminPassword; `
     "Region"=$Region
 }
 #endregion Variables
@@ -178,17 +188,15 @@ if ($TemplateFile) {
 	New-AzureRMResourceGroupDeployment -Name $DeploymentName `
 		-ResourceGroupName $RgName `
 		-TemplateFile $TemplateFile `
-		-TemplateParameterObject $Templateparameters `
+		-TemplateParameterObject $AppSrvTemplateparameters `
         -Mode Incremental `
         -Verbose
         
     New-AzureRmResourceGroupDeployment -Name $DeploymentName `
         -ResourceGroupName $RgName `
-        -TemplateParameterFile .\templates\vstsagent.parameters.json `
-        -TemplateFile .\templates\vstsagent.json `
-        -SystemPrefixName  $SystemPrefixName `
-        -Location $Region `
-		-Mode Incremental `
+        -TemplateFile .$VMTemplateFile `
+        -TemplateParameterObject $VMTemplateparameters `
+        -Mode Incremental `
         -Verbose
 }
 
@@ -196,17 +204,15 @@ if ($TemplateUri) {
     New-AzureRMResourceGroupDeployment -Name $DeploymentName `
 		-ResourceGroupName $RgName `
 		-TemplateUri $TemplateUri `
-        -TemplateParameterObject $Templateparameters `
+        -TemplateParameterObject $AppSrvTemplateparameters `
         -Mode Incremental `
         -Verbose
         
     New-AzureRmResourceGroupDeployment -Name $DeploymentName `
         -ResourceGroupName $RgName `
-        -TemplateParameterFile .\templates\vstsagent.parameters.json `
-        -TemplateFile .\templates\vstsagent.json `
-        -SystemPrefixName  $SystemPrefixName `
-        -Location $Region `
-		-Mode Incremental `
+        -TemplateUri $VMTemplateUri `
+        -TemplateParameterObject $VMTemplateparameters `
+        -Mode Incremental `
         -Verbose
 }
 
