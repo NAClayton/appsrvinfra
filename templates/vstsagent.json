@@ -38,14 +38,6 @@
         "autoShutdownNotificationStatus": {
             "type": "string",
             "defaultValue": "Disabled"
-        },
-        "publicIpAddressType": {
-            "type": "string",
-            "defaultValue": "Dynamic"
-        },
-        "publicIpAddressSku": {
-            "type": "string",
-            "defaultValue": "Basic"
         }
     },
     "variables": {
@@ -53,7 +45,6 @@
         "virtualNetworkName": "[toLower(concat(parameters('SystemPrefixName'),'-vnet'))]",
         "subnetName": "[toLower(concat(parameters('SystemPrefixName'),'-be-snet'))]",
         "networkInterfaceName": "[toLower(concat(parameters('SystemPrefixName'),'-vsts-agent-nic'))]",
-        "publicIpAddressName":  "[toLower(concat(parameters('SystemPrefixName'),'-publicIP'))]",
         "vnetId": "[resourceId('Microsoft.Network/virtualNetworks', variables('virtualNetworkName'))]",
         "subnetRef": "[concat(variables('vnetId'), '/subnets/', variables('subnetName'))]"
     },
@@ -66,8 +57,8 @@
             "properties": {
                 "osProfile": {
                     "computerName": "[variables('virtualMachineName')]",
-                    "adminUsername": "[parameters('LocalAdminLogin')]",
-                    "adminPassword": "[parameters('LocalAdminPassword')]",
+                    "adminUsername": "[parameters('adminUsername')]",
+                    "adminPassword": "[parameters('adminPassword')]",
                     "windowsConfiguration": {
                         "provisionVmAgent": "true"
                     }
@@ -132,9 +123,6 @@
             "name": "[variables('networkInterfaceName')]",
             "apiVersion": "2018-04-01",
             "location": "[parameters('location')]",
-            "dependsOn": [
-                "[concat('Microsoft.Network/publicIpAddresses/', variables('publicIpAddressName'))]"
-            ],
             "properties": {
                 "ipConfigurations": [
                     {
@@ -143,26 +131,12 @@
                             "subnet": {
                                 "id": "[variables('subnetRef')]"
                             },
-                            "privateIPAllocationMethod": "Dynamic",
-                            "publicIpAddress": {
-                                "id": "[resourceId('Microsoft.Network/publicIpAddresses','Microsoft.Network/publicIpAddresses', variables('publicIpAddressName'))]"
-                            }
+                            "privateIPAllocationMethod": "Dynamic"
                         }
                     }
                 ]
-            }
-        },
-        {
-            "name": "[variables('publicIpAddressName')]",
-            "type": "Microsoft.Network/publicIpAddresses",
-            "apiVersion": "2017-08-01",
-            "location": "[parameters('location')]",
-            "properties": {
-                "publicIpAllocationMethod": "[parameters('publicIpAddressType')]"
             },
-            "sku": {
-                "name": "[parameters('publicIpAddressSku')]"
-            }
+            "dependsOn": []
         }
     ],
     "outputs": {
