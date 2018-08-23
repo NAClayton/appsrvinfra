@@ -5,7 +5,7 @@
    One script to rule them all.  This is the script that deploys the AppSrvInfra.  It deploys multiple templates and sets the variables for these templates.
 .EXAMPLE
     This runs the deployment from a local file of the powershell, and accesses the json templates in the code repository.   
-        .\AzureDeploy.ps1 -AppName fsdi-cloudops2 -Environment Dev -TemplateUri https://raw.githubusercontent.com/mtrgoose/appsrv/master/azuredeploy.json -vnetAddressPrefix 10.12.216.0 ^C
+        .\AzureDeploy.ps1 -AppName fsdi-cloudops2 -Environment Dev -TemplateUri https://raw.githubusercontent.com/mtrgoose/appsrv/master/azuredeploy.json -vnetAddressPrefix 10.12.216.0
 .EXAMPLE
    This runs the code completely from the code repository.  This should be the default deployment method.
         $Script = Invoke-WebRequest 'https://raw.githubusercontent.com/mtrgoose/appsrv/master/azuredeploy.ps1'
@@ -30,9 +30,9 @@
 
 param (
 	[Parameter(Mandatory=$false)]
-    [string]$AppName,
+    [string]$AppName = "fsdi-appsrvinfra",
     [Parameter(Mandatory=$true)]
-	[ValidateSet("Dev","Stage","Prod")]
+	[ValidateSet("Test","Dev","Stage","Prod")]
     [string]$Environment,
 	[Parameter(Mandatory=$false)]
     [string]$TemplateFile,
