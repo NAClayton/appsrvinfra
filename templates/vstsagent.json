@@ -12,11 +12,11 @@
             "type": "string",
             "defaultValue": "Standard_D2s_v3"
         },
-        "adminUsername": {
+        "LocalAdminLogin": {
             "type": "string",
             "defaultValue": "fmsadmin"
         },
-        "adminPassword": {
+        "LocalAdminPassword": {
             "type": "securestring"
         },
         "diskSizeGB": {
@@ -66,8 +66,8 @@
             "properties": {
                 "osProfile": {
                     "computerName": "[variables('virtualMachineName')]",
-                    "adminUsername": "[parameters('adminUsername')]",
-                    "adminPassword": "[parameters('adminPassword')]",
+                    "adminUsername": "[parameters('LocalAdminLogin')]",
+                    "adminPassword": "[parameters('LocalAdminPassword')]",
                     "windowsConfiguration": {
                         "provisionVmAgent": "true"
                     }
