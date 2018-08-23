@@ -4,6 +4,7 @@
   "parameters": {
     "SystemPrefixName": {
       "type": "string",
+      "defaultValue": "fsdi-appsrvinfra-test",
       "metadata": {
         "description": "String to append to all resource names"
       }
@@ -49,10 +50,6 @@
       "metadata": {
        "description": "Web App Subnet IP Address With CIDR Block"
       }
-    },
-    "DNSServerAddress": {
-      "type": "string",
-      "defaultValue": "ns1-07.azure-dns.com"
     },
     "WebDNS": {
       "type": "string",
@@ -144,7 +141,7 @@
     "databaseName": "[toLower(concat(parameters('SystemPrefixName'),'-db'))]",
     "elasticPoolName": "[toLower(concat(parameters('SystemPrefixName'),'-ep'))]",
   
-    "TemplateURIs": "https://raw.githubusercontent.com/mtrgoose/AppSrvInfra/master/ase-ilb-blueprint/templates/",
+    "TemplateURIs": "https://raw.githubusercontent.com/mtrgoose/appsrv/master/templates/",
     "_StorageTemplateURIs": "https://<yourstorage>.blob.core.windows.net/arm/blueprint/",
     
     "elasticPooledition": "PremiumRS",
@@ -211,9 +208,6 @@
                   "addressPrefixes": [
                     "[parameters('vnetAddressSpace')]"
                   ]
-                },
-                "dhcpOptions": {
-                  "dnsServers": "[parameters('DNSServerAddress')]"
                 },
                 "subnets": [
                   {
@@ -349,6 +343,10 @@
     "AppGWName": {
       "type": "string",
       "value": "[variables('applicationGatewayName')]"
+    },
+    "vNetID": {
+      "type": "string",
+      "value": "[resourceId('Microsoft.Network/virtualNetworks',variables('vnetName'))]"
     }
   }
 }
