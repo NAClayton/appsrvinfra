@@ -5,7 +5,7 @@
         "SystemPrefixName": {
             "type": "string"
         },
-        "location": {
+        "Region": {
             "type": "string"
         },
         "virtualMachineSize": {
@@ -16,12 +16,20 @@
             "type": "string",
             "defaultValue": "fmsadmin"
         },
-        "LocalAdminPassword": {
-            "type": "securestring"
-        },
         "diskSizeGB": {
             "type": "string",
             "defaultValue": "64"
+        },
+        "LocalAdminPassword": {
+            "type": "securestring"
+        },
+        "publicIpAddressType": {
+            "type": "string",
+            "defaultValue": "Dynamic"
+        },
+        "publicIpAddressSku": {
+            "type": "string",
+            "defaultValue": "Basic"
         },
         "autoShutdownStatus": {
             "type": "string",
@@ -45,20 +53,24 @@
         "virtualNetworkName": "[toLower(concat(parameters('SystemPrefixName'),'-vnet'))]",
         "subnetName": "[toLower(concat(parameters('SystemPrefixName'),'-be-snet'))]",
         "networkInterfaceName": "[toLower(concat(parameters('SystemPrefixName'),'-vsts-agent-nic'))]",
+        "publicIpAddressName": "[toLower(concat(parameters('SystemPrefixName'),'-vm-publicip'))]",
         "vnetId": "[resourceId('Microsoft.Network/virtualNetworks', variables('virtualNetworkName'))]",
         "subnetRef": "[concat(variables('vnetId'), '/subnets/', variables('subnetName'))]"
     },
     "resources": [
         {
-            "type": "Microsoft.Compute/virtualMachines",
             "name": "[variables('virtualMachineName')]",
+            "type": "Microsoft.Compute/virtualMachines",
             "apiVersion": "2018-04-01",
-            "location": "[parameters('location')]",
+            "location": "[parameters('Region')]",
+            "dependsOn": [
+                "[concat('Microsoft.Network/networkInterfaces/', variables('networkInterfaceName'))]"
+            ],
             "properties": {
                 "osProfile": {
                     "computerName": "[variables('virtualMachineName')]",
-                    "adminUsername": "[parameters('adminUsername')]",
-                    "adminPassword": "[parameters('adminPassword')]",
+                    "adminUsername": "[parameters('LocalAdminLogin')]",
+                    "adminPassword": "[parameters('LocalAdminPassword')]",
                     "windowsConfiguration": {
                         "provisionVmAgent": "true"
                     }
@@ -78,8 +90,7 @@
                         "diskSizeGB": "[parameters('diskSizeGB')]",
                         "managedDisk": {
                             "storageAccountType": "Premium_LRS"
-                        },
-                        "name": "[toLower(concat(parameters('SystemPrefixName'),'-OSDisk'))]"
+                        }
                     },
                     "dataDisks": []
                 },
@@ -91,16 +102,13 @@
                     ]
                 },
                 "licenseType": "Windows_Server"
-            },
-            "dependsOn": [
-                "[concat('Microsoft.Network/networkInterfaces/', variables('networkInterfaceName'))]"
-            ]
+            }
         },
         {
-            "type": "Microsoft.DevTestLab/schedules",
             "name": "[concat('shutdown-computevm-', variables('virtualMachineName'))]",
+            "type": "Microsoft.DevTestLab/schedules",
             "apiVersion": "2017-04-26-preview",
-            "location": "[parameters('location')]",
+            "location": "[parameters('Region')]",
             "properties": {
                 "status": "[parameters('autoShutdownStatus')]",
                 "taskType": "ComputeVmShutdownTask",
@@ -119,10 +127,13 @@
             ]
         },
         {
-            "type": "Microsoft.Network/networkInterfaces",
             "name": "[variables('networkInterfaceName')]",
+            "type": "Microsoft.Network/networkInterfaces",
             "apiVersion": "2018-04-01",
-            "location": "[parameters('location')]",
+            "location": "[parameters('Region')]",
+            "dependsOn": [
+                "[concat('Microsoft.Network/publicIpAddresses/', variables('publicIpAddressName'))]"
+            ],
             "properties": {
                 "ipConfigurations": [
                     {
@@ -131,14 +142,36 @@
                             "subnet": {
                                 "id": "[variables('subnetRef')]"
                             },
-                            "privateIPAllocationMethod": "Dynamic"
+                            "privateIPAllocationMethod": "Dynamic",
+                            "publicIpAddress": {
+                                "id": "[resourceId('fsdi-cloudops7-Dev-rg','Microsoft.Network/publicIpAddresses', variables('publicIpAddressName'))]"
+                            }
                         }
                     }
                 ]
+            }
+        },
+        {
+            "name": "[variables('publicIpAddressName')]",
+            "type": "Microsoft.Network/publicIpAddresses",
+            "apiVersion": "2017-08-01",
+            "location": "[parameters('Region')]",
+            "properties": {
+                "publicIpAllocationMethod": "[parameters('publicIpAddressType')]"
             },
-            "dependsOn": []
+            "sku": {
+                "name": "[parameters('publicIpAddressSku')]"
+            }
         }
     ],
     "outputs": {
+        "LocalAdminLogin": {
+            "type": "string",
+            "value": "[parameters('LocalAdminLogin')]"
+        },
+        "VSTSAgent-PublicIPName": {
+            "type": "string",
+            "value": "[variables('publicIpAddressName')]"
+        }
     }
 }
