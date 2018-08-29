@@ -141,7 +141,7 @@
     "databaseName": "[toLower(concat(parameters('SystemPrefixName'),'-db'))]",
     "elasticPoolName": "[toLower(concat(parameters('SystemPrefixName'),'-ep'))]",
   
-    "TemplateURIs": "https://s3.amazonaws.com/ase-appsrv-dev-centralus/",
+    "TemplateURIs": "https://s3.amazonaws.com/ase-appsrv-dev-centralus/templates/",
     "_StorageTemplateURIs": "https://<yourstorage>.blob.core.windows.net/arm/blueprint/",
     
     "elasticPooledition": "PremiumRS",
