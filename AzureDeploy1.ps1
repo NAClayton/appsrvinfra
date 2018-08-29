@@ -37,11 +37,11 @@ param (
 	[Parameter(Mandatory=$false)]
     [string]$TemplateFile,
 	[Parameter(Mandatory=$false)]
-    [string]$TemplateUri,
+    [string]$TemplateUri = "https://s3.amazonaws.com/ase-appsrv-dev-centralus/azuredeploy.json",
     [Parameter(Mandatory=$false)]
     [string]$VMTemplateFile,
 	[Parameter(Mandatory=$false)]
-    [string]$VMTemplateUri = "https://raw.githubusercontent.com/mtrgoose/appsrv/master/templates/vstsagent.json",
+    [string]$VMTemplateUri = "https://s3.amazonaws.com/ase-appsrv-dev-centralus/vstsagent.json",
     [Parameter(Mandatory=$true)]
     [string]$vnetAddressPrefix,
     [Parameter(Mandatory=$false)]
