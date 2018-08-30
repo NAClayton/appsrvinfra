@@ -39,11 +39,11 @@ param (
     [Parameter(Mandatory=$false)]
     [string]$TemplateFile,
 	[Parameter(Mandatory=$false)]
-    [string]$TemplateUri = "https://s3.amazonaws.com/ase-appsrv-dev-centralus/azuredeploy.json",
+    [string]$TemplateUri = "https://raw.githubusercontent.com/fsdi-CloudOps/appsrvinfra/master/azuredeploy.json",
     [Parameter(Mandatory=$false)]
     [string]$VMTemplateFile,
 	[Parameter(Mandatory=$false)]
-    [string]$VMTemplateUri = "https://s3.amazonaws.com/ase-appsrv-dev-centralus/vstsagent.json",
+    [string]$VMTemplateUri = "https://raw.githubusercontent.com/fsdi-CloudOps/appsrvinfra/master/templates/vstsagent.json",
     [Parameter(Mandatory=$false)]
     [string]$sqlAdministratorLogin = "fsdiSAadmin",
     [Parameter(Mandatory=$false)]
@@ -185,8 +185,24 @@ Write-Host "=> Generating password for Azure SQL" -ForegroundColor Yellow
 Write-Host "=>" -ForegroundColor Yellow
 Write-Host "=> Deploying the ASE Blueprint..." -ForegroundColor Yellow
 
+# Create virtual network for DNSZone.
+#region
+$vnetName = $SystemPrefixName + "vnet"
+New-AzureRmVirtualNetwork -Name $vnetName -ResourceGroupName $RGName -AddressPrefix $vnetAddressSpace
+#endregion
+# Create DNSZone for virtual network.
+#region
+$vNetID = (Get-AzureRmResourceGroupDeployment -ResourceGroupName $RgName -Name $DeploymentName).Outputs.vNetID.Value
+New-AzureRMDnsZone -Name $DNSName -ResourceGroupName $RgName `
+	-ZoneType Private `
+	-RegisterionVirtualNetworkID @($vNetID)
+#endregion
+
+
 if ($TemplateFile) {
-	New-AzureRMResourceGroupDeployment -Name ($DeploymentName + '-AppSrvInfra') `
+    
+    
+    New-AzureRMResourceGroupDeployment -Name ($DeploymentName + '-AppSrvInfra') `
 		-ResourceGroupName $RgName `
 		-TemplateFile $TemplateFile `
 		-TemplateParameterObject $AppSrvTemplateparameters `
@@ -397,14 +413,6 @@ Set-AzureRmVirtualNetworkSubnetConfig -VirtualNetwork $vnet -Name $vnet.Subnets.
                                       -AddressPrefix $vnet.Subnets.AddressPrefix[2]`
                                       -NetworkSecurityGroup $BENsg  | Out-Null
 Set-AzureRmVirtualNetwork -VirtualNetwork $vnet  | Out-Null
-#endregion
-
-# Create DNSZone for virtual network.
-#region
-$vNetID = (Get-AzureRmResourceGroupDeployment -ResourceGroupName $RgName -Name $DeploymentName).Outputs.vNetID.Value
-New-AzureRMDnsZone -Name $DNSName -ResourceGroupName $RgName `
-	-ZoneType Private `
-	-RegisterionVirtualNetworkID @($vNetID)
 #endregion
 
 Write-Host "=>" -ForegroundColor Yellow
