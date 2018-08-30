@@ -57,46 +57,6 @@ param (
     [string]$Region = "Central US"
 )
 
-if ($Deployment -eq "Manual" -and $TemplateFile -eq $Null -and $TemplateUri -eq $Null) {Write-Host "You must enter either a TemplateFile or TemplateUri location.  Try again, quiting"; Break}
-
-#region Variables
-$KeyvaultName = "cloudops-" + $Environment
-$sqlAdministratorLoginPassword = (Get-AzureKeyVaultSecret -VaultName $KeyvaultName -Name $sqlAdministratorLogin).SecretValue
-$LocalAdminPassword = (Get-AzureKeyVaultSecret -VaultName $KeyvaultName -Name $LocalAdminLogin).SecretValue
-
-$RGName = $AppName + "-" + $Environment + "-rg"		
-$DeploymentName = $AppName + "-" +  $Environment + "-Deployment"
-$SystemPrefixName = $AppName + "-" + $Environment
-
-$WafNsgName = $AppName + "-" + $Environment + "-WafNsg"	
-$AseWebNsgName = $AppName + "-" + $Environment + "-AseWebNsg"	
-$BENsgName = $AppName + "-" + $Environment + "-BENsg"	
-
-$vnetAddressSpace = $vnetAddressPrefix + '/24'
-$WAFSubnetAddressSpace = $vnetAddressPrefix.replace('.0','.224') + '/27'
-$WebAppSubnetAddressSpace = $vnetAddressPrefix+ '/26'
-$BackendSubnetAddressSpace = $vnetAddressPrefix.replace('.0','.128') + '/26'
-
-$AppSrvTemplateparameters = @{
-    "SystemPrefixName"=$SystemPrefixName; `
-    "vnetAddressSpace"=$vnetAddressSpace; `
-    "WAFSubnetAddressSpace"=$WAFSubnetAddressSpace; `
-    "WebAppSubnetAddressSpace"=$WebAppSubnetAddressSpace; `
-    "BackendSubnetAddressSpace"=$BackendSubnetAddressSpace; `
-    "WebAppSubnetPrefix"=$vnetAddressPrefix; `
-    "sqlAdministratorLogin"=$sqlAdministratorLogin; `
-    "sqlAdministratorLoginPassword"=$sqlAdministratorLoginPassword; `
-    "Region"=$Region
-}
-
-$VMTemplateparameters = @{
-    "SystemPrefixName"=$SystemPrefixName; `
-    "LocalAdminLogin"=$LocalAdminLogin; `
-    "LocalAdminPassword"=$LocalAdminPassword; `
-    "Region"=$Region
-}
-#endregion Variables
-
 ##Catch to verify AzureRM session is active.  Forces sign-in if no session is found
 #region
 if ($Deployment -eq "Manual") {
@@ -155,6 +115,46 @@ if ($Deployment -eq "Manual") {
 }
 #endregion
 
+if ($Deployment -eq "Manual" -and $TemplateFile -eq $Null -and $TemplateUri -eq $Null) {Write-Host "You must enter either a TemplateFile or TemplateUri location.  Try again, quiting"; Break}
+
+#region Variables
+$KeyvaultName = "cloudops-" + $Environment
+$sqlAdministratorLoginPassword = (Get-AzureKeyVaultSecret -VaultName $KeyvaultName -Name $sqlAdministratorLogin).SecretValue
+$LocalAdminPassword = (Get-AzureKeyVaultSecret -VaultName $KeyvaultName -Name $LocalAdminLogin).SecretValue
+
+$RGName = $AppName + "-" + $Environment + "-rg"		
+$DeploymentName = $AppName + "-" +  $Environment + "-Deployment"
+$SystemPrefixName = $AppName + "-" + $Environment
+
+$WafNsgName = $AppName + "-" + $Environment + "-WafNsg"	
+$AseWebNsgName = $AppName + "-" + $Environment + "-AseWebNsg"	
+$BENsgName = $AppName + "-" + $Environment + "-BENsg"	
+
+$vnetAddressSpace = $vnetAddressPrefix + '/24'
+$WAFSubnetAddressSpace = $vnetAddressPrefix.replace('.0','.224') + '/27'
+$WebAppSubnetAddressSpace = $vnetAddressPrefix+ '/26'
+$BackendSubnetAddressSpace = $vnetAddressPrefix.replace('.0','.128') + '/26'
+
+$AppSrvTemplateparameters = @{
+    "SystemPrefixName"=$SystemPrefixName; `
+    "vnetAddressSpace"=$vnetAddressSpace; `
+    "WAFSubnetAddressSpace"=$WAFSubnetAddressSpace; `
+    "WebAppSubnetAddressSpace"=$WebAppSubnetAddressSpace; `
+    "BackendSubnetAddressSpace"=$BackendSubnetAddressSpace; `
+    "WebAppSubnetPrefix"=$vnetAddressPrefix; `
+    "sqlAdministratorLogin"=$sqlAdministratorLogin; `
+    "sqlAdministratorLoginPassword"=$sqlAdministratorLoginPassword; `
+    "Region"=$Region
+}
+
+$VMTemplateparameters = @{
+    "SystemPrefixName"=$SystemPrefixName; `
+    "LocalAdminLogin"=$LocalAdminLogin; `
+    "LocalAdminPassword"=$LocalAdminPassword; `
+    "Region"=$Region
+}
+#endregion Variables
+
 Write-Host "=> Beginning Azure Deployment Sequence for ASE App Service Infrastructure..." -ForegroundColor Yellow
 Write-Host "=> Login to ARM if you are not already." -ForegroundColor Yellow
 
@@ -188,11 +188,11 @@ Write-Host "=> Deploying the ASE Blueprint..." -ForegroundColor Yellow
 # Create virtual network for DNSZone.
 #region
 $vnetName = $SystemPrefixName + "vnet"
-New-AzureRmVirtualNetwork -Name $vnetName -ResourceGroupName $RGName -AddressPrefix $vnetAddressSpace
+New-AzureRmVirtualNetwork -Name $vnetName -ResourceGroupName $RGName -AddressPrefix $vnetAddressSpace -Location $Region
 #endregion
 # Create DNSZone for virtual network.
 #region
-$vNetID = (Get-AzureRmResourceGroupDeployment -ResourceGroupName $RgName -Name $DeploymentName).Outputs.vNetID.Value
+$vNetID = (Get-AzureRmVirtualNetwork -Name fsdi-appsrvinfra-dev-vnet -ResourceGroupName fsdi-appsrvinfra-dev-rg).id 
 New-AzureRMDnsZone -Name $DNSName -ResourceGroupName $RgName `
 	-ZoneType Private `
 	-RegisterionVirtualNetworkID @($vNetID)
