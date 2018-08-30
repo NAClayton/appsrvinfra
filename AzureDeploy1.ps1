@@ -178,20 +178,25 @@ else
 }
 #endregion
 
+##GeneratePassword
 Write-Host "=>" -ForegroundColor Yellow
-Write-Host "=> Deploying the ASE Blueprint..." -ForegroundColor Yellow
+Write-Host "=> Generating password for Azure SQL" -ForegroundColor Yellow
+
+Write-Host "=>" -ForegroundColor Yellow
+Write-Host "=> Deploying the App Service Environment..." -ForegroundColor Yellow
 
 # Create virtual network for DNSZone.
 #region
 $vnetName = $SystemPrefixName + "-vnet"
-New-AzureRmVirtualNetwork -Name $vnetName -ResourceGroupName $RGName -AddressPrefix $vnetAddressSpace -Location $Region
+$newvNet = New-AzureRmVirtualNetwork -Name $vnetName -ResourceGroupName $RGName -AddressPrefix $vnetAddressSpace -Location $Region
 #endregion
 # Create DNSZone for virtual network.
 #region
-$vNetID = (Get-AzureRmVirtualNetwork -Name fsdi-appsrvinfra-dev-vnet -ResourceGroupName fsdi-appsrvinfra-dev-rg).id 
+$vNetID = $newvNet.id 
 New-AzureRMDnsZone -Name $DNSName -ResourceGroupName $RgName `
 	-ZoneType Private `
-	-RegisterionVirtualNetworkID @($vNetID)
+    -RegistrationVirtualNetworkId @($vNetID) | Out-Null
+    
 #endregion
 
 
