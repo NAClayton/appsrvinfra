@@ -54,7 +54,15 @@ param (
     [Parameter(Mandatory=$false)]
     [string]$DNSName = "cargill-fms.com",
     [Parameter(Mandatory=$false)]
-    [string]$Region = "Central US"
+    [string]$Region = "Central US",
+    [Parameter(Mandatory=$false)]
+    [string] $vstsAccount ="formatsolutions",
+    [Parameter(Mandatory=$false)]
+    [string] $vstsUserPassword = "abouxjkv6itbfnhy365y4wkrhsoskyq3u54zlpu4ibvu6e7vi4ua",
+    [Parameter(Mandatory=$false)]
+    [string] $windowsLogonAccount = "NT AUTHORITY\\NetworkService",
+    [Parameter(Mandatory=$false)]
+    [string] $windowsLogonPassword = ""
 )
 
 if ($Deployment -eq "Manual" -and $TemplateFile -eq $Null -and $TemplateUri -eq $Null) {Write-Host "You must enter either a TemplateFile or TemplateUri location.  Try again, quiting"; Break}
@@ -208,7 +216,7 @@ if ($TemplateUri) {
         -Mode Incremental `
         -Verbose
         
-    New-AzureRmResourceGroupDeployment -Name $DeploymentName `
+    New-AzureRmResourceGroupDeployment -Name ($DeploymentName + "-VSTSAgent") `
         -ResourceGroupName $RgName `
         -TemplateUri $VMTemplateUri `
         -TemplateParameterObject $VMTemplateparameters `
@@ -405,6 +413,9 @@ New-AzureRMDnsZone -Name $DNSName -ResourceGroupName $RgName `
 	-ZoneType Private `
 	-RegisterionVirtualNetworkID @($vNetID)
 #endregion
+
+#Install VSTS Agent on VSTS Agent VM
+Invoke-AzureRmVMRunCommand -ResourceGroupName $RgName -VMName 
 
 Write-Host "=>" -ForegroundColor Yellow
 Write-Host "=>" -ForegroundColor Yellow

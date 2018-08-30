@@ -29,12 +29,14 @@
 #>
 
 param (
-	[Parameter(Mandatory=$false)]
-    [string]$AppName = "fsdi-appsrvinfra",
-    [Parameter(Mandatory=$true)]
+	[Parameter(Mandatory=$true)]
 	[ValidateSet("Test","Dev","Stage","Prod")]
     [string]$Environment,
-	[Parameter(Mandatory=$false)]
+	[Parameter(Mandatory=$true)]
+    [string]$vnetAddressPrefix,
+    [Parameter(Mandatory=$false)]
+    [string]$AppName = "fsdi-appsrvinfra",
+    [Parameter(Mandatory=$false)]
     [string]$TemplateFile,
 	[Parameter(Mandatory=$false)]
     [string]$TemplateUri = "https://s3.amazonaws.com/ase-appsrv-dev-centralus/azuredeploy.json",
@@ -42,8 +44,6 @@ param (
     [string]$VMTemplateFile,
 	[Parameter(Mandatory=$false)]
     [string]$VMTemplateUri = "https://s3.amazonaws.com/ase-appsrv-dev-centralus/vstsagent.json",
-    [Parameter(Mandatory=$true)]
-    [string]$vnetAddressPrefix,
     [Parameter(Mandatory=$false)]
     [string]$sqlAdministratorLogin = "fsdiSAadmin",
     [Parameter(Mandatory=$false)]
@@ -136,7 +136,7 @@ if ($Deployment -eq "Manual") {
 			Write-Host "Logging into Azure with $CredfileName" -ForegroundColor Green
 			[System.Net.WebRequest]::DefaultWebProxy.Credentials = [System.Net.CredentialCache]::DefaultCredentials
 			Try {Login-AzureRmAccount -Credential $cred -ErrorAction SilentlyContinue | Out-Null}
-            Catch {$ErrorMessage = $_;Break}
+            Catch {$ErrorMessage -eq $_;Break}
             if ($Environment -eq "Test") {$selection = "a3750e25-9701-422d-a956-31d87d93f99e"}
 			if ($Environment -eq "Dev") {$selection = "a3750e25-9701-422d-a956-31d87d93f99e"}
 			if ($Environment -eq "Stage") {$selection = "065491a8-6f4d-422e-a4db-429003ca9f6b"}

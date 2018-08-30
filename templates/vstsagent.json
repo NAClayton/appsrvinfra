@@ -172,6 +172,10 @@
         "VSTSAgent-PublicIPName": {
             "type": "string",
             "value": "[variables('publicIpAddressName')]"
+        },
+        "VSTSAgent-ComputerName": {
+            "type": "string",
+            "value": "[variables('virtualMachineName')]"
         }
     }
 }
