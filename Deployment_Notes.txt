@@ -1,11 +1,13 @@
-1.  Git clone or copy script from https://github.com/fsdi-CloudOps/appsrvinfra/blob/master/azuredeploy1.ps1 and https://github.com/fsdi-CloudOps/appsrvinfra/blob/master/templates/InstallVstsAgent.ps1
+1.  Git clone or copy script from https://github.com/fsdi-CloudOps/appsrvinfra/blob/master/azuredeploy1.ps1
 2.  Run script from directory
 	a.  azuredeploy1.ps1 -Environment Dev (will change with environment) -vnetAddressPrefix 10.12.214.0
 		This set can run for between 90 - 120 minutes
 	b.  End should say completed successfully, if you don't see this, something failed, please check deployment in Azure Portal.
-3.  Once completed run second script from directory	
-	a.  InstallVstsAgent.ps1 -$poolName fsdi-appsrvinfra-dev (will change with environment)
-4. This completes the installation of the AppServInfa environment.
+3.  Once completed, log into the VSTSAgent-vm.
+4.  Git clone or copy script from https://github.com/fsdi-CloudOps/appsrvinfra/blob/master/templates/InstallVstsAgent.ps1.
+5.  Run script from directory
+	a.  InstallVstsAgent.ps1 -poolName fsdi-appsrvinfra-dev (will change with environment)
+6. This completes the installation of the AppServInfa environment.
 
 
 1.  Git clone or copy script from https://github.com/fsdi-CloudOps/Modeling/blob/master/modelingdeploy.ps1 and https://github.com/fsdi-CloudOps/Modeling/blob/master/modelingappgateway.ps1
