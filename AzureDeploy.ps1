@@ -28,8 +28,6 @@
    The functionality that best describes this cmdlet
 #>
 
-Write-Host "=> Time to make the chimichangas..." -ForegroundColor Yellow
-
 param (
 	[Parameter(Mandatory=$true)]
 	[ValidateSet("Test","Dev","Stage","Prod")]
@@ -157,6 +155,7 @@ $VMTemplateparameters = @{
 }
 #endregion Variables
 
+Write-Host "=> Time to make the chimichangas..." -ForegroundColor Yellow
 Write-Host "=> Beginning Azure Deployment Sequence for ASE App Service Infrastructure..." -ForegroundColor Yellow
 Write-Host "=> Login to ARM if you are not already." -ForegroundColor Yellow
 
