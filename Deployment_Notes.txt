@@ -1,4 +1,4 @@
-1.  Git clone or copy script from https://github.com/fsdi-CloudOps/appsrvinfra/blob/master/azuredeploy1.ps1
+1.  Git clone or copy script from https://github.com/fsdi-CloudOps/appsrvinfra/blob/master/azuredeploy.ps1
 2.  Run script from directory
 	a.  azuredeploy1.ps1 -Environment Dev (will change with environment) -vnetAddressPrefix 10.12.214.0
 		This set can run for between 90 - 120 minutes
