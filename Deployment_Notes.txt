@@ -6,7 +6,7 @@
 3.  Once completed, log into the VSTSAgent-vm.
 4.  Git clone or copy script from https://github.com/fsdi-CloudOps/appsrvinfra/blob/master/templates/InstallVstsAgent.ps1.
 5.  Run script from directory.  It must be in an elevated window.
-	a.  InstallVstsAgent.ps1 -poolName fsdi-appsrvinfra-dev (will change with environment)
+	a.  InstallVstsAgent.ps1 -Environment Dev (will change with environment)
 6. This completes the installation of the AppServInfa environment.
 
 
