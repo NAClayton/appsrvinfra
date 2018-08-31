@@ -28,6 +28,8 @@
    The functionality that best describes this cmdlet
 #>
 
+Write-Host "=> Time to make the chimichangas..." -ForegroundColor Yellow
+
 param (
 	[Parameter(Mandatory=$true)]
 	[ValidateSet("Test","Dev","Stage","Prod")]
@@ -178,10 +180,6 @@ else
 }
 #endregion
 
-##GeneratePassword
-Write-Host "=>" -ForegroundColor Yellow
-Write-Host "=> Generating password for Azure SQL" -ForegroundColor Yellow
-
 Write-Host "=>" -ForegroundColor Yellow
 Write-Host "=> Deploying the App Service Environment..." -ForegroundColor Yellow
 
@@ -201,8 +199,6 @@ New-AzureRMDnsZone -Name $DNSName -ResourceGroupName $RgName `
 
 
 if ($TemplateFile) {
-    
-    
     New-AzureRMResourceGroupDeployment -Name ($DeploymentName + '-AppSrvInfra') `
 		-ResourceGroupName $RgName `
 		-TemplateFile $TemplateFile `
@@ -241,9 +237,9 @@ Write-Host "=> Man that was tense... Good thing we know some Kung-Fu or those fr
 Write-Host "=>" -ForegroundColor Yellow
 Write-Host "=> Retrieving outputs from deployment $DeploymentName." -ForegroundColor Yellow
 
-$VnetName = (Get-AzureRmResourceGroupDeployment -ResourceGroupName $RgName -Name $DeploymentName).Outputs.vnetName.Value
-$SqlName = (Get-AzureRmResourceGroupDeployment -ResourceGroupName $RgName -Name $DeploymentName).Outputs.sqlName.Value
-$AppGWName = (Get-AzureRmResourceGroupDeployment -ResourceGroupName $RgName -Name $DeploymentName).Outputs.appGWName.Value
+$VnetName = (Get-AzureRmResourceGroupDeployment -ResourceGroupName $RgName -Name ($DeploymentName + '-AppSrvInfra')).Outputs.vnetName.Value
+$SqlName = (Get-AzureRmResourceGroupDeployment -ResourceGroupName $RgName -Name ($DeploymentName + '-AppSrvInfra')).Outputs.sqlName.Value
+$AppGWName = (Get-AzureRmResourceGroupDeployment -ResourceGroupName $RgName -Name ($DeploymentName + '-AppSrvInfra')).Outputs.appGWName.Value
 
 Write-Host "=>" -ForegroundColor Yellow
 Write-Host "=> Creating Network Security Group Rules." -ForegroundColor Yellow
