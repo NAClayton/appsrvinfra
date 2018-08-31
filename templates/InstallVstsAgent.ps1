@@ -2,11 +2,15 @@
 # Studio Online account, and adds to the specified build agent pool
 [CmdletBinding()]
 param(
+    [Parameter(Mandatory=$true)]
+    [ValidateSet("Test","Dev","Stage","Prod")]
+    [string]$Environment,
+    [parameter(Mandatory=$false)]
+    [string]$EnvironmentName = "fsdi-appsrvinfra",
     [string] $vstsAccount ="formatsolutions",
     [string] $vstsUserPassword = "abouxjkv6itbfnhy365y4wkrhsoskyq3u54zlpu4ibvu6e7vi4ua",
     [string] $agentName,
     [string] $agentNameSuffix,
-    [string] $poolName = "fsdi-appsrvinfra-dev",
     [string] $windowsLogonAccount = "NT AUTHORITY\\NetworkService",
     [string] $windowsLogonPassword = "",
     [ValidatePattern("[c-zC-Z]")]
@@ -16,6 +20,7 @@ param(
     [boolean] $runAsAutoLogon
 )
 
+$poolName = $EnvironmentName + "-" + $Environment
 ###################################################################################################
 
 # if the agentName is empty, use %COMPUTERNAME% as the value
