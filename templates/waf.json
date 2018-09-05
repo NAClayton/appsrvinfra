@@ -11,18 +11,6 @@
     "Region": {
       "type": "string"
     },
-    "addressPrefix": {
-      "type": "string",
-      "metadata": {
-        "description": "Address prefix for the Virtual Network"
-      }
-    },
-    "subnetPrefix": {
-      "type": "string",
-      "metadata": {
-        "description": "Subnet prefix"
-      }
-    },
     "applicationGatewayName": {
       "type": "string",
       "metadata": {
@@ -79,7 +67,7 @@
     }
   },
   "variables": {
-    "publicIPAddressName": "WAFAppGatewayPublicIP1",
+    "publicIPAddressName": "[concat(parameters('applicationGatewayName'), '-publicIP')]",
     "vnetID": "[resourceId('Microsoft.Network/virtualNetworks',parameters('vnetName'))]",
     "subnetRef": "[concat(variables('vnetID'),'/subnets/',parameters('WAFSubnetName'))]",
     "publicIPRef": "[resourceId('Microsoft.Network/publicIPAddresses',variables('publicIPAddressName'))]",
