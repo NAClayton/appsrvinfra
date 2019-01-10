@@ -53,7 +53,7 @@
     },
     "WebDNS": {
       "type": "string",
-      "defaultValue": "cargill-fms.com",
+      "defaultValue": "testase.cargill-fms.com",
       "metadata": {
         "description": "Set this to the root domain associated with the Web App."
       }
